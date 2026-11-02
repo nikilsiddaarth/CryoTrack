@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Create Account — CryoTrack | Pharmaceutical Cold-Chain Intelligence Platform</title>
+  <link rel="icon" type="image/svg+xml" href="/static/img/favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body class="auth-body">
+
+  <div class="auth-shell">
+    <!-- Left Brand & Cold-Chain Environmental Showcase -->
+    <aside class="auth-showcase" aria-label="CryoTrack registration overview">
+      <div class="auth-brand-lockup">
+        <img src="/static/img/favicon.svg" alt="CryoTrack logo" class="auth-brand-mark">
+        <div>
+          <div class="auth-brand-title">CryoTrack</div>
+          <span class="auth-brand-tag">Pharmaceutical Cold-Chain Intelligence</span>
+        </div>
+      </div>
+
+      <div class="auth-hero-copy">
+        <span class="auth-eyebrow">Invitation-Governed Onboarding</span>
+        <h2>Verified Chain-of-Custody Workspace</h2>
+        <p>
+          To protect critical pharmaceutical batch records, temperature telemetry, and compliance audits, CryoTrack requires an authorized <strong>Invitation Key</strong>. Your assigned department, role, and record boundaries are derived strictly from your verified invitation.
+        </p>
+      </div>
+
+      <div class="auth-pillars">
+        <div class="auth-pillar-item">
+          <strong>Email-Bound Security</strong>
+          <span>Key must match your authorized institutional email</span>
+        </div>
+        <div class="auth-pillar-item">
+          <strong>Server-Derived RBAC</strong>
+          <span>Role and department assigned by trusted server record</span>
+        </div>
+        <div class="auth-pillar-item">
+          <strong>Privilege Governance</strong>
+          <span>Elevated manager roles require administrator sign-off</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Right Registration Form Panel -->
+    <main class="auth-panel">
+      <div class="auth-kicker-row">
+        <img src="/static/img/favicon.svg" alt="" width="32" height="32">
+        <span class="auth-kicker-label">CryoTrack Account Provisioning</span>
+      </div>
+
+      <div class="auth-panel-header">
+        <h1>Create your account</h1>
+        <p>Enter your details and issued invitation key to access the Cold-Chain intelligence platform.</p>
+      </div>
+
+      {% if error %}
+      <div class="auth-alert auth-alert-error" role="alert">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+        <span>{{ error }}</span>
+      </div>
+      {% endif %}
+
+      <form action="/register" method="POST" id="register-form" novalidate>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+        <div class="auth-field">
+          <label class="auth-label" for="invitation_key">
+            Invitation Key <span style="font-weight:600; color:var(--brand-primary);">(Required)</span>
+          </label>
+          <div class="auth-input-wrap">
+            <svg class="auth-input-icon" viewBox="0 0 24 24">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+            </svg>
+            <input
+              type="text"
+              id="invitation_key"
+              name="invitation_key"
+              class="auth-input font-mono"
+              placeholder="CT-INV-XXXX-XXXX-XXXX"
+              value="{{ submitted_key or '' }}"
+              autocomplete="off"
+              required
+              autofocus
+            >
+          </div>
+          <span style="font-size:0.75rem; color:var(--text-faint); margin-top:3px; display:block;">
+            Contact your department lead or administrator if you have not received an invitation key.
+          </span>
+        </div>
+
+        <div class="auth-field">
+          <label class="auth-label" for="full_name">Full Name</label>
+          <div class="auth-input-wrap">
+            <svg class="auth-input-icon" viewBox="0 0 24 24">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+            <input
+              type="text"
+              id="full_name"
+              name="full_name"
+              class="auth-input"
+              placeholder="Dr. Ananya Sharma"
+              value="{{ submitted_name or '' }}"
+              autocomplete="name"
+              required
+            >
+          </div>
+        </div>
+
+        <div class="auth-field">
+          <label class="auth-label" for="email">Work Email Address <span style="font-weight:400; color:var(--text-faint);">(Must match invitation)</span></label>
+          <div class="auth-input-wrap">
+            <svg class="auth-input-icon" viewBox="0 0 24 24">
+              <rect x="2" y="4" width="20" height="16" rx="2"></rect>
+              <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
+            </svg>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              class="auth-input"
+              placeholder="name@hospital-network.org"
+              value="{{ submitted_email or '' }}"
+              autocomplete="email"
+              required
+            >
+          </div>
+        </div>
+
+        <div class="auth-field">
+          <label class="auth-label" for="password">Password <span style="font-weight:400; color:var(--text-faint);">(min 8 chars, letter + number)</span></label>
+          <div class="auth-input-wrap">
+            <svg class="auth-input-icon" viewBox="0 0 24 24">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+            </svg>
+            <input
+              type="password"
+              id="password"
+              name="password"
+              class="auth-input"
+              placeholder="Create a strong password"
+              autocomplete="new-password"
+              required
+            >
+            <button type="button" class="auth-pwd-toggle" id="toggle-reg-pwd" aria-label="Show or hide password">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="auth-field">
+          <label class="auth-label" for="confirm_password">Confirm Password</label>
+          <div class="auth-input-wrap">
+            <svg class="auth-input-icon" viewBox="0 0 24 24">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+            </svg>
+            <input
+              type="password"
+              id="confirm_password"
+              name="confirm_password"
+              class="auth-input"
+              placeholder="Re-enter your password"
+              autocomplete="new-password"
+              required
+            >
+          </div>
+        </div>
+
+        <button type="submit" class="auth-submit-btn" id="reg-submit-btn">
+          <span id="reg-btn-label">Redeem Invitation &amp; Create Account</span>
+        </button>
+      </form>
+
+      <div class="auth-switch-row">
+        Already have an account?
+        <a href="/login" class="auth-switch-link">Sign In</a>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const pwd1 = document.getElementById('password');
+    const pwd2 = document.getElementById('confirm_password');
+    document.getElementById('toggle-reg-pwd').addEventListener('click', () => {
+      const nextType = pwd1.type === 'password' ? 'text' : 'password';
+      pwd1.type = nextType;
+      pwd2.type = nextType;
+    });
+
+    document.getElementById('register-form').addEventListener('submit', (e) => {
+      const key = document.getElementById('invitation_key').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const pwd = pwd1.value;
+      const pwdConfirm = pwd2.value;
+
+      if (!key) {
+        e.preventDefault();
+        alert('An Invitation Key is required to create a CryoTrack account.');
+        return;
+      }
+      if (!email || !pwd) {
+        e.preventDefault();
+        alert('Please complete all required fields.');
+        return;
+      }
+      if (pwd !== pwdConfirm) {
+        e.preventDefault();
+        alert('Password confirmation does not match.');
+        return;
+      }
+
+      const btn = document.getElementById('reg-submit-btn');
+      btn.disabled = true;
+      document.getElementById('reg-btn-label').textContent = 'Validating Invitation...';
+    });
+  </script>
+</body>
+</html>

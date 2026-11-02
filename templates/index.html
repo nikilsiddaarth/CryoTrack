@@ -1,0 +1,1082 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cold-Chain Command Center — CryoTrack | Pharmaceutical Cold-Chain Intelligence Platform</title>
+  <link rel="icon" type="image/svg+xml" href="/static/img/favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body
+  data-csrf-token="{{ csrf_token }}"
+  data-user-role="{{ current_user.role }}"
+  data-user-email="{{ current_user.email }}"
+  data-user-name="{{ current_user.full_name }}"
+  data-user-department="{{ current_user.department }}"
+  data-landing-tab="{{ landing_tab }}"
+  data-user-permissions='{{ user_permissions | tojson | safe }}'
+  data-google-configured="{{ 'true' if google_oauth_configured else 'false' }}"
+>
+
+  <div class="app-shell">
+    <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
+
+    <!-- ====================================================================
+         DEEP NAVY SIDEBAR NAVIGATION (CryoTrack Identity)
+         ==================================================================== -->
+    <aside class="sidebar" id="app-sidebar" aria-label="Primary navigation">
+      <div class="sidebar-brand">
+        <img src="/static/img/favicon.svg" alt="CryoTrack emblem" class="sidebar-logo-img">
+        <div class="sidebar-brand-copy">
+          <h2>CryoTrack</h2>
+          <span>Cold-Chain Intelligence</span>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="sidebar-section-caption" role="presentation">OPERATIONS &amp; TELEMETRY</div>
+
+        {% if 'tab-command-center' in allowed_tabs %}
+        <button class="nav-link-btn {% if landing_tab == 'tab-command-center' %}active{% endif %}" data-tab="tab-command-center" onclick="switchTab('tab-command-center')">
+          <div class="nav-link-left">
+            <svg class="nav-link-icon" viewBox="0 0 24 24">
+              <rect x="3" y="3" width="7" height="9" rx="1.5"></rect>
+              <rect x="14" y="3" width="7" height="5" rx="1.5"></rect>
+              <rect x="14" y="12" width="7" height="9" rx="1.5"></rect>
+              <rect x="3" y="16" width="7" height="5" rx="1.5"></rect>
+            </svg>
+            <span>Cold-Chain Command Center</span>
+          </div>
+        </button>
+        {% endif %}
+
+        {% if 'tab-products' in allowed_tabs %}
+        <button class="nav-link-btn {% if landing_tab == 'tab-products' %}active{% endif %}" data-tab="tab-products" onclick="switchTab('tab-products')">
+          <div class="nav-link-left">
+            <svg class="nav-link-icon" viewBox="0 0 24 24">
+              <path d="M10.5 20.5l10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"></path>
+              <path d="M8.5 8.5l7 7"></path>
+            </svg>
+            <span>Products &amp; Quality</span>
+          </div>
+          <span class="nav-badge" id="badge-prod-count">—</span>
+        </button>
+        {% endif %}
+
+        {% if 'tab-shipments' in allowed_tabs %}
+        <button class="nav-link-btn {% if landing_tab == 'tab-shipments' %}active{% endif %}" data-tab="tab-shipments" onclick="switchTab('tab-shipments')">
+          <div class="nav-link-left">
+            <svg class="nav-link-icon" viewBox="0 0 24 24">
+              <rect x="1" y="3" width="15" height="13" rx="2"></rect>
+              <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon>
+              <circle cx="5.5" cy="18.5" r="2.5"></circle>
+              <circle cx="18.5" cy="18.5" r="2.5"></circle>
+            </svg>
+            <span>Shipments &amp; Fleet</span>
+          </div>
+          <span class="nav-badge" id="badge-ship-count">—</span>
+        </button>
+        {% endif %}
+
+        {% if 'tab-monitoring' in allowed_tabs %}
+        <button class="nav-link-btn {% if landing_tab == 'tab-monitoring' %}active{% endif %}" data-tab="tab-monitoring" onclick="switchTab('tab-monitoring')">
+          <div class="nav-link-left">
+            <svg class="nav-link-icon" viewBox="0 0 24 24">
+              <path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"></path>
+            </svg>
+            <span>Cold-Chain Monitoring</span>
+          </div>
+          <span class="nav-badge alert-count" id="badge-alert-count">—</span>
+        </button>
+        {% endif %}
+
+        {% if 'tab-inventory' in allowed_tabs %}
+        <button class="nav-link-btn {% if landing_tab == 'tab-inventory' %}active{% endif %}" data-tab="tab-inventory" onclick="switchTab('tab-inventory')">
+          <div class="nav-link-left">
+            <svg class="nav-link-icon" viewBox="0 0 24 24">
+              <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+              <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+              <line x1="12" y1="22.08" x2="12" y2="12"></line>
+            </svg>
+            <span>Inventory &amp; Warehousing</span>
+          </div>
+        </button>
+        {% endif %}
+
+        <div class="sidebar-section-caption" role="presentation">COMPLIANCE &amp; DISTRIBUTION</div>
+
+        {% if 'tab-incidents' in allowed_tabs %}
+        <button class="nav-link-btn {% if landing_tab == 'tab-incidents' %}active{% endif %}" data-tab="tab-incidents" onclick="switchTab('tab-incidents')">
+          <div class="nav-link-left">
+            <svg class="nav-link-icon" viewBox="0 0 24 24">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+              <line x1="12" y1="9" x2="12" y2="13"></line>
+              <line x1="12" y1="17" x2="12.01" y2="17"></line>
+            </svg>
+            <span>Incidents &amp; Compliance</span>
+          </div>
+          <span class="nav-badge alert-count" id="badge-incident-count">—</span>
+        </button>
+        {% endif %}
+
+        {% if 'tab-deliveries' in allowed_tabs %}
+        <button class="nav-link-btn {% if landing_tab == 'tab-deliveries' %}active{% endif %}" data-tab="tab-deliveries" onclick="switchTab('tab-deliveries')">
+          <div class="nav-link-left">
+            <svg class="nav-link-icon" viewBox="0 0 24 24">
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+              <polyline points="9 22 9 12 15 12 15 22"></polyline>
+            </svg>
+            <span>Deliveries &amp; Distribution</span>
+          </div>
+        </button>
+        {% endif %}
+
+        <div class="sidebar-section-caption" role="presentation">INTELLIGENCE &amp; GOVERNANCE</div>
+
+        {% if 'tab-reports' in allowed_tabs %}
+        <button class="nav-link-btn {% if landing_tab == 'tab-reports' %}active{% endif %}" data-tab="tab-reports" onclick="switchTab('tab-reports')">
+          <div class="nav-link-left">
+            <svg class="nav-link-icon" viewBox="0 0 24 24">
+              <line x1="18" y1="20" x2="18" y2="10"></line>
+              <line x1="12" y1="20" x2="12" y2="4"></line>
+              <line x1="6" y1="20" x2="6" y2="14"></line>
+            </svg>
+            <span>Reports &amp; Analytics</span>
+          </div>
+        </button>
+        {% endif %}
+
+        {% if 'tab-users' in allowed_tabs %}
+        <button class="nav-link-btn {% if landing_tab == 'tab-users' %}active{% endif %}" data-tab="tab-users" onclick="switchTab('tab-users')">
+          <div class="nav-link-left">
+            <svg class="nav-link-icon" viewBox="0 0 24 24">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+              <circle cx="9" cy="7" r="4"></circle>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+            </svg>
+            <span>User &amp; Access Management</span>
+          </div>
+        </button>
+        {% endif %}
+
+        {% if 'tab-settings' in allowed_tabs %}
+        <button class="nav-link-btn {% if landing_tab == 'tab-settings' %}active{% endif %}" data-tab="tab-settings" onclick="switchTab('tab-settings')">
+          <div class="nav-link-left">
+            <svg class="nav-link-icon" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="3"></circle>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9c.26.604.852.997 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+            </svg>
+            <span>Settings</span>
+          </div>
+        </button>
+        {% endif %}
+      </nav>
+
+      <div class="sidebar-clean-foot">
+        <span>CryoTrack Platform</span>
+        <span>GDP Compliant</span>
+      </div>
+    </aside>
+
+    <!-- ====================================================================
+         MAIN WORKSPACE WRAPPER
+         ==================================================================== -->
+    <div class="workspace-wrapper">
+
+      <!-- Redesigned Top Header: Left Role Badge + Right Account & Sign Out -->
+      <header class="top-header">
+        <div class="header-left">
+          <button class="mobile-menu-toggle" id="mobile-toggle-btn" aria-label="Toggle navigation menu">
+            <svg viewBox="0 0 24 24">
+              <line x1="3" y1="12" x2="21" y2="12"></line>
+              <line x1="3" y1="6" x2="21" y2="6"></line>
+              <line x1="3" y1="18" x2="21" y2="18"></line>
+            </svg>
+          </button>
+
+          <div class="header-title-group">
+            <div class="header-title-row">
+              <h1 id="active-header-title">Cold-Chain Command Center</h1>
+              <span class="role-access-pill role-{{ current_user.role|lower }}" id="header-role-pill" title="Authenticated server-enforced access level">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                </svg>
+                {{ current_user.role }}
+              </span>
+            </div>
+            <div class="header-subtitle" id="active-header-subtitle">
+              Pharmaceutical Logistics &amp; Environmental Intelligence
+            </div>
+          </div>
+        </div>
+
+        <div class="header-right">
+          <div class="account-menu-wrap" id="account-menu-wrap">
+            <button type="button" class="account-trigger-btn" id="account-menu-btn" aria-expanded="false" aria-haspopup="true">
+              <div class="account-avatar" id="header-user-initials">{{ current_user.initials }}</div>
+              <div class="account-meta">
+                <div class="account-name" id="header-user-name">{{ current_user.full_name }}</div>
+                <div class="account-role-sub">{{ current_user.role }}</div>
+              </div>
+              <svg class="account-caret" viewBox="0 0 24 24">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </button>
+
+            <div class="account-dropdown" id="account-dropdown" role="menu">
+              <div class="account-dropdown-head">
+                <strong id="dropdown-user-name">{{ current_user.full_name }}</strong>
+                <span>{{ current_user.email }}</span>
+              </div>
+              <button type="button" class="account-dropdown-item" onclick="closeAccountMenu(); switchTab('tab-settings');">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9c.26.604.852.997 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                <span>Account &amp; Platform Settings</span>
+              </button>
+              <button type="button" class="account-dropdown-item" onclick="closeAccountMenu(); switchTab('tab-reports');">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+                <span>Operational Reports</span>
+              </button>
+              <a href="/logout" class="account-dropdown-item danger">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                <span>Sign Out</span>
+              </a>
+            </div>
+          </div>
+
+          <a href="/logout" class="header-signout-btn" title="End session and sign out">
+            <svg viewBox="0 0 24 24">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+              <polyline points="16 17 21 12 16 7"></polyline>
+              <line x1="21" y1="12" x2="9" y2="12"></line>
+            </svg>
+            <span>Sign Out</span>
+          </a>
+        </div>
+      </header>
+
+      <!-- ==================================================================
+           MAIN MULTI-PAGE APPLICATION WORKSPACE (10 COHERENT PAGES)
+           ================================================================== -->
+      <main class="main-content">
+
+        <!-- ================================================================
+             PAGE 1: COLD-CHAIN COMMAND CENTER (Primary Dashboard Reference)
+             ================================================================ -->
+        <section id="tab-command-center" class="tab-content active">
+          <div class="command-hero-banner">
+            <div class="command-hero-bg"></div>
+            <div class="command-hero-overlay"></div>
+            <div class="command-hero-content">
+              <div class="command-hero-copy">
+                <span class="command-hero-kicker">CryoTrack — Pharmaceutical Cold-Chain Intelligence Platform</span>
+                <h2>Cold-Chain Command Center</h2>
+                <p>
+                  Environmental telemetry intelligence, refrigerated batch integrity, excursion alerts, and healthcare custody monitoring backed directly by Oracle operational records.
+                </p>
+              </div>
+              <div class="command-hero-telemetry-glass">
+                <div class="hero-glass-label">Latest Recorded Sensor Sample</div>
+                <div class="hero-glass-reading" id="hero-latest-reading">Loading sample...</div>
+                <div class="hero-glass-meta" id="hero-latest-meta">Querying Oracle telemetry log</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 5 Translucent Layered Monitoring Cards (100% Oracle-backed) -->
+          <div class="primary-monitoring-grid">
+            <div class="monitoring-card">
+              <div class="monitoring-card-header">
+                <span class="monitoring-category">Mean Recorded Temp</span>
+                <div class="monitoring-icon-circle icon-cyan">
+                  <svg viewBox="0 0 24 24"><path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"></path></svg>
+                </div>
+              </div>
+              <div class="monitoring-value-row">
+                <span class="monitoring-value" id="card-temp-val">—</span>
+                <span class="monitoring-unit">°C</span>
+              </div>
+              <div class="monitoring-card-footer">
+                <span id="card-temp-range">Recorded span: —</span>
+                <span class="badge badge-info" id="card-temp-badge">Calculated Avg</span>
+              </div>
+            </div>
+
+            <div class="monitoring-card">
+              <div class="monitoring-card-header">
+                <span class="monitoring-category">Mean Humidity</span>
+                <div class="monitoring-icon-circle icon-blue">
+                  <svg viewBox="0 0 24 24"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path></svg>
+                </div>
+              </div>
+              <div class="monitoring-value-row">
+                <span class="monitoring-value" id="card-humidity-val">—</span>
+                <span class="monitoring-unit">% RH</span>
+              </div>
+              <div class="monitoring-card-footer">
+                <span id="card-humidity-sub">Across sensor samples</span>
+                <span class="badge badge-info">Calculated Avg</span>
+              </div>
+            </div>
+
+            <div class="monitoring-card">
+              <div class="monitoring-card-header">
+                <span class="monitoring-category">Fleet Shipments</span>
+                <div class="monitoring-icon-circle icon-navy">
+                  <svg viewBox="0 0 24 24"><rect x="1" y="3" width="15" height="13" rx="2"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>
+                </div>
+              </div>
+              <div class="monitoring-value-row">
+                <span class="monitoring-value" id="stat-in-transit">—</span>
+                <span class="monitoring-unit">In Transit</span>
+              </div>
+              <div class="monitoring-card-footer">
+                <span id="stat-shipments-sub">— Delivered</span>
+                <span class="badge badge-success">Fleet Active</span>
+              </div>
+            </div>
+
+            <div class="monitoring-card">
+              <div class="monitoring-card-header">
+                <span class="monitoring-category">Excursion Alerts</span>
+                <div class="monitoring-icon-circle icon-crimson">
+                  <svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                </div>
+              </div>
+              <div class="monitoring-value-row">
+                <span class="monitoring-value" id="stat-alerts">—</span>
+                <span class="monitoring-unit">Open</span>
+              </div>
+              <div class="monitoring-card-footer">
+                <span id="stat-alerts-sub">— Critical / High</span>
+                <span class="badge badge-danger" id="stat-alerts-badge">Monitor</span>
+              </div>
+            </div>
+
+            <div class="monitoring-card">
+              <div class="monitoring-card-header">
+                <span class="monitoring-category">Available Cold Stock</span>
+                <div class="monitoring-icon-circle icon-teal">
+                  <svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+                </div>
+              </div>
+              <div class="monitoring-value-row">
+                <span class="monitoring-value" id="stat-inventory">—</span>
+                <span class="monitoring-unit">Units</span>
+              </div>
+              <div class="monitoring-card-footer">
+                <span id="stat-reserved-sub">— Reserved</span>
+                <span class="badge badge-success">Certified</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Lower 3-Panel Dashboard Grid -->
+          <div class="lower-dashboard-grid">
+            <div class="dashboard-panel">
+              <div class="panel-header">
+                <div class="panel-title telemetry-title">
+                  <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+                  <span>Recorded Sensor Temperature Trend</span>
+                </div>
+                <div class="chart-legend-row">
+                  <div class="legend-item"><span class="legend-color-dot" style="background:var(--cryo-blue);"></span><span>Recorded (°C)</span></div>
+                  <div class="legend-item"><span class="legend-color-dot" style="background:var(--status-critical);"></span><span>Upper Ref (8°C)</span></div>
+                  <div class="legend-item"><span class="legend-color-dot" style="background:var(--status-success);"></span><span>Lower Ref (2°C)</span></div>
+                </div>
+              </div>
+              <div class="chart-canvas-container">
+                <canvas id="telemetryChart"></canvas>
+              </div>
+            </div>
+
+            <div class="dashboard-panel">
+              <div class="panel-header">
+                <div class="panel-title">
+                  <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                  <span>Cold-Chain Operational Summary</span>
+                </div>
+              </div>
+              <div class="summary-panel-body">
+                <div class="summary-row"><span class="summary-label">Registered Products</span><span class="summary-value" id="stat-products">—</span></div>
+                <div class="summary-row"><span class="summary-label">Available Batches</span><span class="summary-value" id="stat-batches-sub">—</span></div>
+                <div class="summary-row"><span class="summary-label">Quality Tests Passed</span><span class="summary-value" id="stat-qc-sub">—</span></div>
+                <div class="summary-row"><span class="summary-label">Delivered / Damaged Units</span><span class="summary-value" id="stat-deliveries-sub">—</span></div>
+                <div class="summary-row"><span class="summary-label">Active IoT Sensor Nodes</span><span class="summary-value" id="stat-sensors">—</span></div>
+                <div class="summary-row"><span class="summary-label">Unresolved Incidents</span><span class="summary-value" id="stat-incidents" style="color:var(--status-critical);">—</span></div>
+              </div>
+            </div>
+
+            <div class="dashboard-panel">
+              <div class="panel-header">
+                <div class="panel-title">
+                  <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                  <span>System Health Overview</span>
+                </div>
+              </div>
+              <div class="system-status-body">
+                <div class="status-circle-container" id="system-status-ring">
+                  <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                </div>
+                <div class="status-headline" id="system-status-title">Evaluating Posture</div>
+                <div class="status-description" id="system-status-desc">Synchronizing cold-chain alert and incident records from Oracle XE.</div>
+                <div style="margin-top:1rem; display:flex; gap:0.5rem; flex-wrap:wrap; justify-content:center;">
+                  <button class="btn btn-outline btn-sm" onclick="switchTab('tab-monitoring')">Review Alerts</button>
+                  <button class="btn btn-outline btn-sm" onclick="switchTab('tab-reports')">Analytics</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Command Center Operational Feed Tables -->
+          <div class="dashboard-tables-grid">
+            <div class="table-card">
+              <div class="panel-header">
+                <div class="panel-title">
+                  <svg viewBox="0 0 24 24"><rect x="1" y="3" width="15" height="13" rx="2"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon></svg>
+                  <span>Recent Shipments &amp; Active Dispatches</span>
+                </div>
+                <button class="btn btn-outline btn-sm" onclick="switchTab('tab-shipments')">Manage Fleet &rarr;</button>
+              </div>
+              <div class="table-responsive">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Shipment</th>
+                      <th>Route</th>
+                      <th>Vehicle</th>
+                      <th>Driver</th>
+                      <th>Priority</th>
+                      <th>Status</th>
+                      <th>Expected</th>
+                    </tr>
+                  </thead>
+                  <tbody id="dashboard-shipments-tbody">
+                    <tr><td colspan="7" class="empty-state"><span class="loading-spinner"></span> Loading shipments...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="table-card">
+              <div class="panel-header">
+                <div class="panel-title">
+                  <svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path></svg>
+                  <span>Open Temperature Excursions</span>
+                </div>
+                <button class="btn btn-outline btn-sm" onclick="switchTab('tab-monitoring')">All Telemetry &rarr;</button>
+              </div>
+              <div class="alert-feed-list" id="dashboard-alerts-container">
+                <div class="empty-state"><span class="loading-spinner"></span> Loading excursions...</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ================================================================
+             PAGE 2: PRODUCTS & QUALITY
+             ================================================================ -->
+        <section id="tab-products" class="tab-content">
+          <div class="module-header-bar">
+            <div class="module-header-copy">
+              <h2>Products &amp; Quality Assurance</h2>
+              <p>Pharmaceutical formulations, production batches, storage conditions, quality tests, and licensed manufacturers.</p>
+            </div>
+            <div class="module-actions write-only-control">
+              <button class="btn btn-primary" onclick="openCreateBatchModal()">+ New Batch</button>
+              <button class="btn btn-navy" onclick="openCreateProductModal()">+ New Product</button>
+              <button class="btn btn-outline" onclick="openCreateTestModal()">+ Log Quality Test</button>
+              <button class="btn btn-outline" onclick="openCreateManufacturerModal()">+ Manufacturer</button>
+            </div>
+          </div>
+
+          <div class="subtab-bar" role="tablist">
+            <button class="subtab-btn active" onclick="switchSubView('products', 'sub-prod-batches', this)">Product Batches</button>
+            <button class="subtab-btn" onclick="switchSubView('products', 'sub-prod-catalog', this)">Products &amp; Storage Conditions</button>
+            <button class="subtab-btn" onclick="switchSubView('products', 'sub-prod-qctests', this)">Quality Tests</button>
+            <button class="subtab-btn" onclick="switchSubView('products', 'sub-prod-mfgs', this)">Manufacturers</button>
+          </div>
+
+          <div class="toolbar-container">
+            <div class="toolbar-group">
+              <div class="search-wrap">
+                <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                <input type="text" id="prod-search" placeholder="Search product, batch, manufacturer, tester..." oninput="applyProductsFilter()">
+              </div>
+              <select id="prod-category-filter" class="filter-select" onchange="applyProductsFilter()">
+                <option value="">All Storage Categories</option>
+                <option value="Refrigerated">Refrigerated (2°C – 8°C)</option>
+                <option value="Room Temperature">Room Temperature (15°C – 25°C)</option>
+              </select>
+              <select id="batch-status-filter" class="filter-select" onchange="applyProductsFilter()">
+                <option value="">All Batch Statuses</option>
+                <option value="Available">Available</option>
+                <option value="Reserved">Reserved</option>
+                <option value="In Transit">In Transit</option>
+                <option value="Quarantined">Quarantined</option>
+              </select>
+            </div>
+            <button class="btn btn-outline" onclick="loadProductsModule(true)">Refresh Data</button>
+          </div>
+
+          <div id="sub-prod-batches" class="subview-pane active" data-group="products">
+            <div class="table-card" id="card-batches-table"></div>
+          </div>
+          <div id="sub-prod-catalog" class="subview-pane" data-group="products">
+            <div class="table-card" id="card-products-table"></div>
+          </div>
+          <div id="sub-prod-qctests" class="subview-pane" data-group="products">
+            <div class="table-card" id="card-qctests-table"></div>
+          </div>
+          <div id="sub-prod-mfgs" class="subview-pane" data-group="products">
+            <div class="table-card" id="card-mfgs-table"></div>
+          </div>
+        </section>
+
+        <!-- ================================================================
+             PAGE 3: SHIPMENTS & FLEET
+             ================================================================ -->
+        <section id="tab-shipments" class="tab-content">
+          <div class="module-header-bar">
+            <div class="module-header-copy">
+              <h2>Shipments &amp; Refrigerated Fleet</h2>
+              <p>Cold-chain dispatches, cargo batch manifests, refrigerated vehicles, certified drivers, and transit routes.</p>
+            </div>
+            <div class="module-actions write-only-control">
+              <button class="btn btn-primary" onclick="openCreateShipmentModal()">+ Dispatch Shipment</button>
+              <button class="btn btn-outline" onclick="openCreateVehicleModal()">+ Add Vehicle</button>
+              <button class="btn btn-outline" onclick="openCreateDriverModal()">+ Add Driver</button>
+              <button class="btn btn-outline" onclick="openCreateRouteModal()">+ Define Route</button>
+            </div>
+          </div>
+
+          <div class="subtab-bar" role="tablist">
+            <button class="subtab-btn active" onclick="switchSubView('shipments', 'sub-ship-list', this)">Shipments &amp; Assignments</button>
+            <button class="subtab-btn" onclick="switchSubView('shipments', 'sub-ship-items', this)">Shipment Cargo Items</button>
+            <button class="subtab-btn" onclick="switchSubView('shipments', 'sub-ship-vehicles', this)">Vehicles</button>
+            <button class="subtab-btn" onclick="switchSubView('shipments', 'sub-ship-drivers', this)">Drivers</button>
+            <button class="subtab-btn" onclick="switchSubView('shipments', 'sub-ship-routes', this)">Routes &amp; Stops</button>
+          </div>
+
+          <div class="toolbar-container">
+            <div class="toolbar-group">
+              <div class="search-wrap">
+                <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                <input type="text" id="ship-search" placeholder="Search shipment ID, origin, destination, vehicle, driver..." oninput="applyShipmentsFilter()">
+              </div>
+              <select id="ship-status-filter" class="filter-select" onchange="applyShipmentsFilter()">
+                <option value="">All Shipment Statuses</option>
+                <option value="Dispatched">Dispatched / In Transit</option>
+                <option value="Delivered">Delivered</option>
+              </select>
+              <select id="ship-priority-filter" class="filter-select" onchange="applyShipmentsFilter()">
+                <option value="">All Priorities</option>
+                <option value="High">High</option>
+                <option value="Medium">Medium</option>
+                <option value="Low">Low</option>
+              </select>
+            </div>
+            <button class="btn btn-outline" onclick="loadShipmentsModule(true)">Refresh Fleet</button>
+          </div>
+
+          <div id="sub-ship-list" class="subview-pane active" data-group="shipments">
+            <div class="table-card" id="card-shipments-table"></div>
+          </div>
+          <div id="sub-ship-items" class="subview-pane" data-group="shipments">
+            <div class="table-card" id="card-shipitems-table"></div>
+          </div>
+          <div id="sub-ship-vehicles" class="subview-pane" data-group="shipments">
+            <div class="table-card" id="card-vehicles-table"></div>
+          </div>
+          <div id="sub-ship-drivers" class="subview-pane" data-group="shipments">
+            <div class="table-card" id="card-drivers-table"></div>
+          </div>
+          <div id="sub-ship-routes" class="subview-pane" data-group="shipments">
+            <div class="table-card" id="card-routes-table"></div>
+            <div class="table-card" id="card-routestops-table"></div>
+          </div>
+        </section>
+
+        <!-- ================================================================
+             PAGE 4: COLD-CHAIN MONITORING
+             ================================================================ -->
+        <section id="tab-monitoring" class="tab-content">
+          <div class="module-header-bar">
+            <div class="module-header-copy">
+              <h2>Cold-Chain Environmental Monitoring</h2>
+              <p>Recorded IoT sensor measurements, expected thermal thresholds, and temperature excursion alerts.</p>
+            </div>
+            <div class="module-actions write-only-control">
+              <button class="btn btn-primary" onclick="openRecordReadingModal()">+ Record Sensor Reading</button>
+              <button class="btn btn-outline" onclick="openCreateSensorModal()">+ Register IoT Sensor</button>
+            </div>
+          </div>
+
+          <div class="subtab-bar" role="tablist">
+            <button class="subtab-btn active" onclick="switchSubView('monitoring', 'sub-mon-alerts', this)">Temperature Alerts</button>
+            <button class="subtab-btn" onclick="switchSubView('monitoring', 'sub-mon-sensors', this)">IoT Sensor Nodes</button>
+            <button class="subtab-btn" onclick="switchSubView('monitoring', 'sub-mon-readings', this)">Recorded Sensor Readings</button>
+          </div>
+
+          <div class="toolbar-container">
+            <div class="toolbar-group">
+              <div class="search-wrap">
+                <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                <input type="text" id="mon-search" placeholder="Search sensor serial, alert type, vehicle..." oninput="applyMonitoringFilter()">
+              </div>
+              <select id="alert-status-filter" class="filter-select" onchange="applyMonitoringFilter()">
+                <option value="">All Alert Statuses</option>
+                <option value="Open">Open</option>
+                <option value="Acknowledged">Acknowledged</option>
+                <option value="Resolved">Resolved</option>
+              </select>
+              <select id="alert-severity-filter" class="filter-select" onchange="applyMonitoringFilter()">
+                <option value="">All Severities</option>
+                <option value="Critical">Critical</option>
+                <option value="High">High</option>
+                <option value="Medium">Medium</option>
+              </select>
+            </div>
+            <button class="btn btn-outline" onclick="loadMonitoringModule(true)">Refresh Telemetry</button>
+          </div>
+
+          <div id="sub-mon-alerts" class="subview-pane active" data-group="monitoring">
+            <div class="table-card" id="card-alerts-table"></div>
+          </div>
+          <div id="sub-mon-sensors" class="subview-pane" data-group="monitoring">
+            <div class="table-card" id="card-sensors-table"></div>
+          </div>
+          <div id="sub-mon-readings" class="subview-pane" data-group="monitoring">
+            <div class="table-card" id="card-readings-table"></div>
+          </div>
+        </section>
+
+        <!-- ================================================================
+             PAGE 5: INVENTORY & WAREHOUSING
+             ================================================================ -->
+        <section id="tab-inventory" class="tab-content">
+          <div class="module-header-bar">
+            <div class="module-header-copy">
+              <h2>Inventory &amp; Cold Warehousing</h2>
+              <p>Certified cold warehouses, temperature-controlled storage chambers, available vs. reserved stock, and audited movements.</p>
+            </div>
+            <div class="module-actions write-only-control">
+              <button class="btn btn-primary" onclick="openStockTransactionModal()">+ Record Stock Movement</button>
+              <button class="btn btn-navy" onclick="openAllocateInventoryModal()">+ Allocate Stock Lot</button>
+              <button class="btn btn-outline" onclick="openCreateStorageUnitModal()">+ Storage Unit</button>
+              <button class="btn btn-outline" onclick="openCreateWarehouseModal()">+ Warehouse</button>
+            </div>
+          </div>
+
+          <div class="subtab-bar" role="tablist">
+            <button class="subtab-btn active" onclick="switchSubView('inventory', 'sub-inv-stock', this)">Inventory Allocations</button>
+            <button class="subtab-btn" onclick="switchSubView('inventory', 'sub-inv-trx', this)">Inventory Transactions</button>
+            <button class="subtab-btn" onclick="switchSubView('inventory', 'sub-inv-warehouses', this)">Warehouses</button>
+            <button class="subtab-btn" onclick="switchSubView('inventory', 'sub-inv-units', this)">Storage Units</button>
+          </div>
+
+          <div class="toolbar-container">
+            <div class="toolbar-group">
+              <div class="search-wrap">
+                <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                <input type="text" id="inv-search" placeholder="Search product, batch, warehouse, chamber, operator..." oninput="applyInventoryFilter()">
+              </div>
+              <select id="inv-status-filter" class="filter-select" onchange="applyInventoryFilter()">
+                <option value="">All Stock Statuses</option>
+                <option value="Available">Available</option>
+                <option value="Reserved">Reserved</option>
+              </select>
+            </div>
+            <button class="btn btn-outline" onclick="loadInventoryModule(true)">Refresh Inventory</button>
+          </div>
+
+          <div id="sub-inv-stock" class="subview-pane active" data-group="inventory">
+            <div class="table-card" id="card-inventory-table"></div>
+          </div>
+          <div id="sub-inv-trx" class="subview-pane" data-group="inventory">
+            <div class="table-card" id="card-transactions-table"></div>
+          </div>
+          <div id="sub-inv-warehouses" class="subview-pane" data-group="inventory">
+            <div class="table-card" id="card-warehouses-table"></div>
+          </div>
+          <div id="sub-inv-units" class="subview-pane" data-group="inventory">
+            <div class="table-card" id="card-units-table"></div>
+          </div>
+        </section>
+
+        <!-- ================================================================
+             PAGE 6: INCIDENTS & COMPLIANCE
+             ================================================================ -->
+        <section id="tab-incidents" class="tab-content">
+          <div class="module-header-bar">
+            <div class="module-header-copy">
+              <h2>Incidents &amp; Regulatory Compliance</h2>
+              <p>Cold-chain deviations, linked excursion alerts, product impact assessments, and CAPA resolution workflows.</p>
+            </div>
+            <div class="module-actions write-only-control">
+              <button class="btn btn-primary" onclick="openCreateIncidentModal()">+ Log Compliance Incident</button>
+            </div>
+          </div>
+
+          <div class="toolbar-container">
+            <div class="toolbar-group">
+              <div class="search-wrap">
+                <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                <input type="text" id="inc-search" placeholder="Search incident type, description, corrective action..." oninput="applyIncidentsFilter()">
+              </div>
+              <select id="inc-status-filter" class="filter-select" onchange="applyIncidentsFilter()">
+                <option value="">All Resolution Statuses</option>
+                <option value="Open">Open</option>
+                <option value="Under Investigation">Under Investigation</option>
+                <option value="Under Review">Under Review</option>
+                <option value="Resolved">Resolved</option>
+              </select>
+              <select id="inc-severity-filter" class="filter-select" onchange="applyIncidentsFilter()">
+                <option value="">All Severities</option>
+                <option value="Critical">Critical</option>
+                <option value="High">High</option>
+                <option value="Medium">Medium</option>
+              </select>
+            </div>
+            <button class="btn btn-outline" onclick="loadIncidentsModule(true)">Refresh Incidents</button>
+          </div>
+
+          <div class="table-card" id="card-incidents-table"></div>
+        </section>
+
+        <!-- ================================================================
+             PAGE 7: DELIVERIES & DISTRIBUTION
+             ================================================================ -->
+        <section id="tab-deliveries" class="tab-content">
+          <div class="module-header-bar">
+            <div class="module-header-copy">
+              <h2>Deliveries &amp; Healthcare Distribution</h2>
+              <p>Hospital proof-of-delivery receipts, received vs. damaged unit verification, healthcare facilities, and regional hubs.</p>
+            </div>
+            <div class="module-actions write-only-control">
+              <button class="btn btn-primary" onclick="openCreateDeliveryModal()">+ Record Delivery Receipt</button>
+              <button class="btn btn-outline" onclick="openCreateFacilityModal()">+ Healthcare Facility</button>
+              <button class="btn btn-outline" onclick="openCreateDistCenterModal()">+ Distribution Center</button>
+            </div>
+          </div>
+
+          <div class="subtab-bar" role="tablist">
+            <button class="subtab-btn active" onclick="switchSubView('deliveries', 'sub-deliv-list', this)">Hospital Deliveries &amp; POD</button>
+            <button class="subtab-btn" onclick="switchSubView('deliveries', 'sub-deliv-facilities', this)">Healthcare Facilities</button>
+            <button class="subtab-btn" onclick="switchSubView('deliveries', 'sub-deliv-centers', this)">Distribution Centers</button>
+          </div>
+
+          <div class="toolbar-container">
+            <div class="toolbar-group">
+              <div class="search-wrap">
+                <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                <input type="text" id="deliv-search" placeholder="Search hospital, city, recipient, POD code..." oninput="applyDeliveriesFilter()">
+              </div>
+              <select id="deliv-status-filter" class="filter-select" onchange="applyDeliveriesFilter()">
+                <option value="">All Delivery Statuses</option>
+                <option value="Delivered">Delivered</option>
+              </select>
+            </div>
+            <button class="btn btn-outline" onclick="loadDeliveriesModule(true)">Refresh Distribution</button>
+          </div>
+
+          <div id="sub-deliv-list" class="subview-pane active" data-group="deliveries">
+            <div class="table-card" id="card-deliveries-table"></div>
+          </div>
+          <div id="sub-deliv-facilities" class="subview-pane" data-group="deliveries">
+            <div class="table-card" id="card-facilities-table"></div>
+          </div>
+          <div id="sub-deliv-centers" class="subview-pane" data-group="deliveries">
+            <div class="table-card" id="card-distcenters-table"></div>
+          </div>
+        </section>
+
+        <!-- ================================================================
+             PAGE 8: REPORTS & ANALYTICS
+             ================================================================ -->
+        <section id="tab-reports" class="tab-content">
+          <div class="module-header-bar">
+            <div class="module-header-copy">
+              <h2>Operational Reports &amp; Cold-Chain Analytics</h2>
+              <p>Live SQL aggregations across batch shelf-life, excursion severities, warehouse stock, incident resolution, and delivery integrity.</p>
+            </div>
+            <div class="module-actions">
+              <button class="btn btn-primary" onclick="exportActiveReportCsv()">
+                <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                <span>Export Active Report (CSV)</span>
+              </button>
+              <button class="btn btn-outline" onclick="loadReportsModule(true)">Refresh Analytics</button>
+            </div>
+          </div>
+
+          <div class="reports-kpi-grid">
+            <div class="monitoring-card">
+              <div class="monitoring-category">Delivery Integrity Rate</div>
+              <div class="monitoring-value-row" style="margin-top:0.45rem;"><span class="monitoring-value" id="rep-kpi-integrity">—</span><span class="monitoring-unit">%</span></div>
+              <div class="monitoring-card-footer"><span id="rep-kpi-integrity-sub">Undamaged units received</span></div>
+            </div>
+            <div class="monitoring-card">
+              <div class="monitoring-category">Batches Near Expiry (&le;180d)</div>
+              <div class="monitoring-value-row" style="margin-top:0.45rem;"><span class="monitoring-value" id="rep-kpi-expiry">—</span><span class="monitoring-unit">Batches</span></div>
+              <div class="monitoring-card-footer"><span>Calculated vs Oracle SYSDATE</span></div>
+            </div>
+            <div class="monitoring-card">
+              <div class="monitoring-category">Incident Resolution Rate</div>
+              <div class="monitoring-value-row" style="margin-top:0.45rem;"><span class="monitoring-value" id="rep-kpi-incrate">—</span><span class="monitoring-unit">%</span></div>
+              <div class="monitoring-card-footer"><span id="rep-kpi-incrate-sub">Closed / total incidents</span></div>
+            </div>
+            <div class="monitoring-card">
+              <div class="monitoring-category">Total Stock Across Depots</div>
+              <div class="monitoring-value-row" style="margin-top:0.45rem;"><span class="monitoring-value" id="rep-kpi-stock">—</span><span class="monitoring-unit">Units</span></div>
+              <div class="monitoring-card-footer"><span>Available + reserved lots</span></div>
+            </div>
+          </div>
+
+          <div class="dashboard-tables-grid" style="margin-bottom:1.3rem;">
+            <div class="dashboard-panel">
+              <div class="panel-header"><div class="panel-title"><span>Stock Allocation by Top Warehouses</span></div></div>
+              <div class="chart-canvas-container"><canvas id="warehouseReportChart"></canvas></div>
+            </div>
+            <div class="dashboard-panel">
+              <div class="panel-header"><div class="panel-title"><span>Temperature Alerts by Severity</span></div></div>
+              <div class="chart-canvas-container"><canvas id="excursionReportChart"></canvas></div>
+            </div>
+          </div>
+
+          <div class="toolbar-container">
+            <div class="toolbar-group">
+              <label for="report-selector" style="font-size:0.8rem; font-weight:600; color:var(--text-secondary);">Active Dataset:</label>
+              <select id="report-selector" class="filter-select" onchange="renderSelectedReportTable()">
+                <option value="batch_expiry">Product &amp; Batch Expiry Report</option>
+                <option value="delivery_performance">Healthcare Delivery Performance &amp; Damage Audit</option>
+                <option value="inventory_availability">Warehouse Inventory Availability</option>
+                <option value="excursion_summary">Temperature Excursion Summary</option>
+                <option value="incident_resolution">Compliance Incident Resolution Summary</option>
+                <option value="shipment_summary">Shipment Status &amp; Priority Summary</option>
+              </select>
+              <select id="report-expiry-window" class="filter-select" onchange="loadReportsModule(true)">
+                <option value="">All Expiry Horizons</option>
+                <option value="90">Expiring Within 90 Days</option>
+                <option value="180">Expiring Within 180 Days</option>
+                <option value="365">Expiring Within 365 Days</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="table-card" id="card-active-report-table"></div>
+        </section>
+
+        <!-- =====================================================================
+             PAGE 9: USER & ACCESS MANAGEMENT (Accounts, Invitations, Matrix, Audit)
+             ===================================================================== -->
+        <section id="tab-users" class="tab-content">
+          <div class="module-header-bar">
+            <div class="module-header-copy">
+              <h2>User &amp; Access Management</h2>
+              <p>Govern team accounts, issue cryptographic invitations, configure 8-role x 31-action permissions, assign record scopes, and inspect security audit events.</p>
+            </div>
+            <div class="module-actions">
+              {% if 'invitations:issue' in user_permissions %}
+              <button class="btn btn-primary" onclick="openIssueInvitationModal()">+ Issue Invitation</button>
+              {% endif %}
+              {% if current_user.role == 'Administrator' %}
+              <button class="btn btn-outline" onclick="openCreateUserModal()">+ Direct Provision</button>
+              {% endif %}
+              <button class="btn btn-outline" onclick="refreshCurrentUsersSubView()">Refresh</button>
+            </div>
+          </div>
+
+          <!-- User Management Sub-Navigation Pills -->
+          <div class="user-subnav-bar">
+            <button class="subnav-pill active" data-subview="accounts" onclick="switchUsersSubView('accounts')">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              <span>User Accounts</span>
+            </button>
+            <button class="subnav-pill" data-subview="invitations" onclick="switchUsersSubView('invitations')">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><polyline points="3 7 12 13 21 7"/></svg>
+              <span>Invitations &amp; Onboarding</span>
+            </button>
+            <button class="subnav-pill" data-subview="matrix" onclick="switchUsersSubView('matrix')">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg>
+              <span>Role-Permission Matrix</span>
+            </button>
+            <button class="subnav-pill" data-subview="audit" onclick="switchUsersSubView('audit')">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              <span>Security Audit History</span>
+            </button>
+          </div>
+
+          <!-- Subview 1: User Accounts -->
+          <div id="users-subview-accounts" class="users-subview-panel active">
+            <div class="table-card" id="card-users-table"></div>
+          </div>
+
+          <!-- Subview 2: Invitations -->
+          <div id="users-subview-invitations" class="users-subview-panel" style="display:none;">
+            <div class="table-card" id="card-invitations-table"></div>
+          </div>
+
+          <!-- Subview 3: Role-Permission Matrix -->
+          <div id="users-subview-matrix" class="users-subview-panel" style="display:none;">
+            <div class="table-card" id="card-matrix-table"></div>
+          </div>
+
+          <!-- Subview 4: Audit History -->
+          <div id="users-subview-audit" class="users-subview-panel" style="display:none;">
+            <div class="table-card" id="card-audit-table"></div>
+          </div>
+        </section>
+
+        <!-- ================================================================
+             PAGE 10: SETTINGS
+             ================================================================ -->
+        <section id="tab-settings" class="tab-content">
+          <div class="module-header-bar">
+            <div class="module-header-copy">
+              <h2>Platform &amp; Account Settings</h2>
+              <p>Manage your authenticated profile, security credentials, interface pagination defaults, and restrained Oracle connectivity status.</p>
+            </div>
+          </div>
+
+          <div class="settings-grid">
+            <!-- Profile Identity -->
+            <div class="settings-card">
+              <h3>Authenticated Profile</h3>
+              <p class="card-desc">Update your display identity shown across audit logs and transaction records.</p>
+              <form id="settings-profile-form" onsubmit="submitOwnProfile(event)">
+                <div class="form-grid">
+                  <div class="form-field full-span">
+                    <label for="set-full-name">Full Display Name <span class="req-star">*</span></label>
+                    <input type="text" id="set-full-name" class="form-control" value="{{ current_user.full_name }}" required>
+                  </div>
+                  <div class="form-field">
+                    <label>Registered Email</label>
+                    <input type="text" class="form-control" value="{{ current_user.email }}" disabled>
+                  </div>
+                  <div class="form-field">
+                    <label>Assigned Access Role</label>
+                    <input type="text" class="form-control" value="{{ current_user.role }}" disabled>
+                  </div>
+                </div>
+                <div class="form-actions">
+                  <button type="submit" class="btn btn-primary">Save Profile</button>
+                </div>
+              </form>
+            </div>
+
+            <!-- Password Security -->
+            <div class="settings-card">
+              <h3>Security &amp; Password</h3>
+              <p class="card-desc">Update your account password. Salted scrypt hashes are stored server-side.</p>
+              <form id="settings-pwd-form" onsubmit="submitOwnPassword(event)">
+                <div class="form-grid">
+                  <div class="form-field full-span">
+                    <label for="set-cur-pwd">Current Password <span class="req-star">*</span></label>
+                    <input type="password" id="set-cur-pwd" class="form-control" autocomplete="current-password" required>
+                  </div>
+                  <div class="form-field">
+                    <label for="set-new-pwd">New Password <span class="req-star">*</span></label>
+                    <input type="password" id="set-new-pwd" class="form-control" placeholder="Min 8 chars, letter + number" autocomplete="new-password" required>
+                  </div>
+                  <div class="form-field">
+                    <label for="set-cfm-pwd">Confirm New Password <span class="req-star">*</span></label>
+                    <input type="password" id="set-cfm-pwd" class="form-control" autocomplete="new-password" required>
+                  </div>
+                </div>
+                <div class="form-actions">
+                  <button type="submit" class="btn btn-primary">Update Password</button>
+                </div>
+              </form>
+            </div>
+
+            <!-- Workspace Preferences -->
+            <div class="settings-card">
+              <h3>Interface &amp; Table Preferences</h3>
+              <p class="card-desc">Configure default pagination density across operational tables.</p>
+              <div class="form-grid">
+                <div class="form-field">
+                  <label for="pref-page-size">Default Rows Per Page</label>
+                  <select id="pref-page-size" class="form-control" onchange="saveInterfacePreferences()">
+                    <option value="10">10 rows per page</option>
+                    <option value="15" selected>15 rows per page</option>
+                    <option value="25">25 rows per page</option>
+                    <option value="50">50 rows per page</option>
+                  </select>
+                </div>
+                <div class="form-field">
+                  <label>Cold-Chain Reference Band</label>
+                  <input type="text" class="form-control" value="2.0°C – 8.0°C (Standard Refrigerated)" disabled>
+                </div>
+              </div>
+            </div>
+
+            <!-- Restrained System & Oracle Health Card -->
+            <div class="settings-card">
+              <h3>Service &amp; Integration Status</h3>
+              <p class="card-desc">Restrained operational connectivity summary. Credentials and secrets are never displayed.</p>
+
+              <div class="health-status-row">
+                <span class="pulse-dot" id="settings-db-dot"></span>
+                <div>
+                  <strong style="font-size:0.85rem; display:block;" id="settings-db-headline">Checking Oracle Database...</strong>
+                  <span style="font-size:0.76rem; color:var(--text-muted);" id="settings-db-sub">Service: {{ service }} &bull; Schema: {{ schema_user }}</span>
+                </div>
+              </div>
+
+              <div class="detail-grid" style="margin-bottom:1rem;">
+                <div class="detail-item">
+                  <span class="detail-label">Database Service</span>
+                  <span class="detail-value"><code>{{ service }}</code> ({{ schema_user }})</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Engine Version</span>
+                  <span class="detail-value" id="settings-db-version">—</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Google OAuth 2.0</span>
+                  <span class="detail-value">
+                    {% if google_oauth_configured %}
+                      <span class="badge badge-success">Configured</span>
+                    {% else %}
+                      <span class="badge badge-warning">Client ID Not Set in .env</span>
+                    {% endif %}
+                  </span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Session Protection</span>
+                  <span class="detail-value"><span class="badge badge-info">CSRF + HttpOnly Active</span></span>
+                </div>
+              </div>
+
+              <button type="button" class="btn btn-outline btn-sm" onclick="checkSystemHealth(true)">Verify Connection</button>
+            </div>
+          </div>
+        </section>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- ====================================================================
+       REUSABLE MODAL DIALOG (Forms, Record Audits & Confirmations)
+       ==================================================================== -->
+  <div class="modal-overlay" id="app-modal" onclick="closeModal()">
+    <div class="modal-box" onclick="event.stopPropagation()" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <div class="modal-header">
+        <h3 id="modal-title">Record Details</h3>
+        <button type="button" class="modal-close-btn" onclick="closeModal()" aria-label="Close dialog">&times;</button>
+      </div>
+      <div class="modal-body" id="modal-body"></div>
+    </div>
+  </div>
+
+  <!-- Non-blocking Toast Notifications -->
+  <div class="toast-stack" id="toast-stack" aria-live="polite"></div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
