@@ -29,3 +29,14 @@ Desktop.ini
 .DS_Store
 
 *.bak
+
+
+# Generated files
+*.log
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Sensitive local configuration
+.env.*
+!.env.example
