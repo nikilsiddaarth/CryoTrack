@@ -79,7 +79,7 @@ CryoTrack is a pharmaceutical cold-chain management system developed to organize
 Replace the placeholder with the actual GitHub repository URL after publishing the project.
 
 ```bash
-git clone <YOUR_GITHUB_REPOSITORY_URL>
+git clone <https://github.com/nikilsiddaarth/CryoTrack>
 cd cold-chain-monitor
 ```
 
